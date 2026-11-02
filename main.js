@@ -11,6 +11,40 @@ document.querySelectorAll('.copy').forEach((button) => {
   });
 });
 
+// Visit counter. Pages has no storage, so the count lives on Abacus.
+// One visit per browser session, then a refresh every 30 seconds.
+const visits = document.querySelector('.visits');
+if (visits) {
+  const counter = 'https://abacus.jasoncameron.dev';
+  const key = 'rahul8762-github-io/visits';
+  const isLive = location.hostname === 'rahul8762.github.io';
+
+  const seenThisSession = () => {
+    try {
+      if (sessionStorage.getItem('counted')) return true;
+      sessionStorage.setItem('counted', '1');
+    } catch {
+      // Storage blocked: count the visit anyway.
+    }
+    return false;
+  };
+
+  const refresh = async (action) => {
+    try {
+      const response = await fetch(`${counter}/${action}/${key}`);
+      if (!response.ok) return;
+      const { value } = await response.json();
+      visits.textContent = `${value.toLocaleString('en-US')} ${value === 1 ? 'visit' : 'visits'}`;
+      visits.hidden = false;
+    } catch {
+      // Counter unavailable: leave it hidden.
+    }
+  };
+
+  refresh(isLive && !seenThisSession() ? 'hit' : 'get');
+  setInterval(() => { if (!document.hidden) refresh('get'); }, 30000);
+}
+
 // Hover readout for Fig. 1. Points are [snr dB, BER, x, y] in SVG units.
 const chart = document.querySelector('#ber-chart');
 if (chart) {
